@@ -124,7 +124,7 @@ class Myclass:
 
         self.r_field_v=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
         self.r_field_a=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
-        self.lamda=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))  #v,a共通
+        self.lamda=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))  #v,a same
         print('b')
 #        for w0 in range(self.n):
 #                for d0 in range(self.n):
