@@ -37,7 +37,7 @@ def cdistance(s,t):   #2
     else:
         return abs(s-t)
 
-def myd(x,y,z,x0,y0,z0):    #2点間距離
+def myd(x,y,z,x0,y0,z0):    #2point distance
     return  np.linalg.norm(np.array([x0,y0,z0])-np.array([x,y,z]))
 def Decay(s):  #3
     return 2.1+0.058*s+0.022*s**2
