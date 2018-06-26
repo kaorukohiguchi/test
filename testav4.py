@@ -3,6 +3,7 @@ import random
 import math
 import scipy.stats
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from f import myf
 
 #parameters value
@@ -16,20 +17,20 @@ eta_train=0.5
 eta_test=0.33
 lv=30
 lav=1
-x0=3.3
-s=0.6
+x0=5.5
+s=0.3
 tau=5.0/1000
-l_in=1.85/10.0
-l_ex=1.9/3.0
+l_in=1.85/5.0
+l_ex=1.9/2.0
 sigma_ex=12
 sigma_in=24
-r0=1.3
+r0=1.3/1.1
 sigma_r=30
 ga=0.03
 b=180**(-16)
 
 def sigmoid(x):
-    return 1*(1/(1+np.exp(-s*(x-x0)))-0.0)
+    return 1*(1/(1+np.exp(-s*(x-x0)))-0.02)*1.04
 #    return np.where(x<0,-1.0,1.0)
 def cdistance(s,t):   #2
     if(abs(s-t)>90):
@@ -83,8 +84,8 @@ def inp(k,s,d,w,l):
 #    print(pos)
     isensor=np.zeros((k,k,k))
     mean = np.array([d,w,l])
-    cov  = np.diag([1.0,1.0,1.0])
-    isen= 5000*scipy.stats.multivariate_normal(mean,cov).pdf(pos)
+    cov  = 0.4*np.diag([1.0,1.0,1.0])
+    isen= 2000*scipy.stats.multivariate_normal(mean,cov).pdf(pos)
     isen=np.reshape(isen,(k,k,k))
 #    print('i', isen)
 #    print(d,w,l)
@@ -120,11 +121,11 @@ def avpos():
 
 class Myclass:
     def __init__(self):
-        self.n=12
+        self.n=10
 
         self.r_field_v=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
         self.r_field_a=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
-        self.lamda=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))  #v,a same
+        self.lamda=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))  #v,a共通
         print('b')
 #        for w0 in range(self.n):
 #                for d0 in range(self.n):
@@ -161,7 +162,18 @@ class Myclass:
 ##                            for d1 in range(self.n):
 #                            self.r_field_a[w1,h1,w2,h]=r0*np.exp(-np.linalg.norm(np.array([w1,h1])-np.array([w2,h2]))**2/(2.0*sigma_r**2))
     #    print(self.w_cross_v)
-
+        a1=np.random.randint(0, self.n)
+        a2=np.random.randint(0, self.n)
+        a3=np.random.randint(0, self.n)
+        k=self.n
+        re=np.zeros((50,self.n,self.n,self.n))
+        for test in range(50):
+            a1=np.random.randint(0, self.n)
+            a2=np.random.randint(0, self.n)
+            a3=np.random.randint(0, self.n)
+            re[test,:,:,:]=inp(k,1,a1,a2,a3)
+        plt.plot(re[:,:,3,3].T)
+    #    plt.show()
     def train(self,s):
         fia=np.zeros((self.n,self.n,self.n,self.n))
         fiv=np.zeros((self.n,self.n,self.n,self.n))
@@ -170,7 +182,7 @@ class Myclass:
     #    stepa=np.zeros((2,self.n,self.n))
         stepv=np.zeros((1,self.n))
         res=np.zeros((self.n,self.n,self.n,12))
-        epoch=1
+        epoch=40
         for epo in range(epoch):
             stepa=np.zeros((2,self.n,self.n,self.n))
             y=np.zeros((2,self.n,self.n,self.n))
@@ -215,7 +227,7 @@ class Myclass:
                         for w1 in range(self.n):
                             for h1 in range(self.n):
                                 for d1 in range(self.n):
-                                    self.r_field_v[w0,h0,d0,w1,h1,d1]=r0*np.exp(-myd(w0,h0,d0,w1,h1,d1)**2/(2.0*0.001*sigma_r**2))   #2.41,A181
+                                    self.r_field_v[w0,h0,d0,w1,h1,d1]=r0*np.exp(-myd(w0,h0,d0,w1,h1,d1)**2/(2.0*0.001*0.5*sigma_r**2))   #2.41,A181
             self.r_field_a=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
             self.r_field_a=np.copy(self.r_field_v)
     #        for w0 in range(self.n):
@@ -227,17 +239,17 @@ class Myclass:
     #                                self.r_field_a[w0,h0,d0,w1,h1,d1]=r0*np.exp(-myd(w0,h0,d0,w1,h1,d1)**2/(2.0*0.001*sigma_r**2))
         #    res[:,0]=self.r_field_v[:,90]
         #    res[:,1]=self.w_cross_v[:,90]
-            res[:,:,:,0]=self.r_field_a[3,3,3,:,:,:]
-            res[:,:,:,1]=self.w_cross_v[3,3,3,:,:,:]
+            res[:,:,:,0]=self.r_field_a[4,4,4,:,:,:]
+            res[:,:,:,1]=self.w_cross_v[4,4,4,:,:,:]
             if s==1:
-                num=100
+                num=90
             for t in range(num):
                 theta1=np.random.randint(0, self.n, (1, 3))
                 a1=np.random.randint(0, self.n)
                 a2=np.random.randint(0, self.n)
                 a3=np.random.randint(0, self.n)
                 k=self.n
-                if(t<50):
+                if(t<90):
                     input[0,:,:,:]=inp(k,1,a1,a2,a3)
                     input[1,:,:,:]=0
                 else:#1
@@ -259,7 +271,7 @@ class Myclass:
                 c[1,:,:,:]=np.sum(np.sum(np.sum(y[0,:,:,:][np.newaxis,np.newaxis,np.newaxis,:]*self.w_cross_a,axis=5),axis=4),axis=3)
                 y=sigmoid(u+c+l)
                 print('u+c+l',u+c+l)
-                for j in range(10):
+                for j in range(4):
                     y+=0.002*(-y+sigmoid(u+l+c))
                     l[0,:,:,:]=np.sum(np.sum(np.sum(y[0,:,:,:][np.newaxis,np.newaxis,np.newaxis,:]*self.lamda,axis=5),axis=4),axis=3)
                     l[1,:,:,:]=np.sum(np.sum(np.sum(y[1,:,:,:][np.newaxis,np.newaxis,np.newaxis,:]*self.lamda,axis=5),axis=4),axis=3)
@@ -270,12 +282,12 @@ class Myclass:
                 print('c',c)
             #    print(l)
                 print('y',y)
-                ytest=np.where(y>0.3,-1,0)
+                ytest=np.where(y>0.28,-1,0)
                 stepa=np.where(stepa>0,stepa+1,0)
                 stepa=np.where(stepa+ytest==-1,1,stepa)
                 print('step',stepa)
 #r update  2.19,2.39,A9
-                ga=0.1*myf(stepa)
+                ga=0.4*myf(stepa)
                 input_ex=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
                 y_ex=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
                 ga_ex=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
@@ -308,16 +320,16 @@ class Myclass:
         #        yj_ex[i,:]=np.copy(y[1,:,:,:])
         #        y_ex[:,i]=np.copy(y[0,:,:,:])
         #        self.w_cross_a+=ga_exa*(yj_ex-self.w_cross_a)*y_ex
-                if(t==50):
-                    res[:,:,:,2]=self.r_field_v[3,3,3,:,:,:]
-                    res[:,:,:,3]=self.r_field_a[3,3,3,:,:,:]
-                    res[:,:,:,4]=self.w_cross_v[3,3,3,:,:,:]
-                    res[:,:,:,5]=self.w_cross_a[3,3,3,:,:,:]
-                elif(t==99):
-                    res[:,:,:,6]=self.r_field_v[3,3,3,:,:,:]
-                    res[:,:,:,7]=self.r_field_a[3,3,3,:,:,:]
-                    res[:,:,:,8]=self.w_cross_v[3,3,3,:,:,:]
-                    res[:,:,:,9]=self.w_cross_a[3,3,3,:,:,:]
+                if(t==14):
+                    res[:,:,:,2]+=self.r_field_v[4,4,4,:,:,:]/epoch
+                    res[:,:,:,3]+=self.r_field_a[4,4,4,:,:,:]/epoch
+                    res[:,:,:,4]+=self.w_cross_v[4,4,4,:,:,:]/epoch
+                    res[:,:,:,5]+=self.w_cross_a[4,4,4,:,:,:]/epoch
+                elif(t==150):
+                    res[:,:,:,6]+=self.r_field_v[4,4,4,:,:,:]/epoch
+                    res[:,:,:,7]+=self.r_field_a[4,4,4,:,:,:]/epoch
+                    res[:,:,:,8]+=self.w_cross_v[4,4,4,:,:,:]/epoch
+                    res[:,:,:,9]+=self.w_cross_a[4,4,4,:,:,:]/epoch
         #    fia+=self.r_field_a/epoch
         #    fiv+=self.r_field_v/epoch
         #    wa+=self.w_cross_a/epoch
@@ -332,24 +344,58 @@ class Myclass:
     #    res[:,3]=fia[:,70]
     #    res[:,4]=wv[:,70]
     #    res[:,5]=wa[:,70]
-        plt.plot(res[:,3,3,0].T,color='black')
-        plt.plot(res[:,3,3,1].T,color='grey')
-        plt.plot(res[:,3,3,2].T,color='darkred')
-        plt.plot(res[:,3,3,3].T,color='darkblue')
-        plt.plot(res[:,3,3,4].T,color='hotpink')
-        plt.plot(res[:,3,3,5].T,color='deepskyblue')
-        plt.plot(res[:,3,3,6].T,color='red')
-        plt.plot(res[:,3,3,7].T,color='blue')
-        plt.plot(res[:,3,3,8].T,color='lightpink')
-        plt.plot(res[:,3,3,9].T,color='skyblue')
+    #    res=res/epoch
+        plt.plot(res[:,4,4,0].T,color='black')
+        plt.plot(res[:,4,4,1].T,color='grey')
+        plt.plot(res[:,4,4,2].T,color='darkred')
+        plt.plot(res[:,4,4,3].T,color='darkblue')
+        plt.plot(res[:,4,4,4].T,color='hotpink')
+        plt.plot(res[:,4,4,5].T,color='deepskyblue')
+        plt.plot(res[:,4,4,6].T,color='red')
+        plt.plot(res[:,4,4,7].T,color='blue')
+        plt.plot(res[:,4,4,8].T,color='lightpink')
+        plt.plot(res[:,4,4,9].T,color='skyblue')
     ##    plt.plot(res,color=['black','grey','darkred','darkblue','hotpink','black','grey','darkred','darkblue','hotpink'])
-    #    plt.legend(['weight_0(s,v)','crossmodal_0(s,v)','weight_150(s)','weight_150(v)','crossmodal_150(s)','crossmodal_150(v)','weight_300(s)','weight_300(v)','crossmodal_300(s)','crossmodal_300(v)'])
+        plt.legend(['weight_0(s,v)','crossmodal_0(s,v)','weight_150(s)','weight_150(v)','crossmodal_150(s)','crossmodal_150(v)','weight_300(s)','weight_300(v)','crossmodal_300(s)','crossmodal_300(v)'])
     #    plt.title("Change of synaptic weight (hypothesis)(neulon number=90 as example)")
     #    plt.ylabel("synaptic weight")
     #    plt.xlabel("neulon number")
         plt.show()
-        return 1
 
+
+
+        plt.plot(res[:,4,4,0].T,color='black')
+        plt.plot(res[:,4,4,2].T,color='darkred')
+        plt.plot(res[:,4,4,3].T,color='darkblue')
+        plt.plot(res[:,4,4,6].T,color='red')
+        plt.plot(res[:,4,4,7].T,color='blue')
+        plt.legend(['weight_0(s,v)','weight_150(s)','weight_150(v)','weight_300(s)','weight_300(v)'])
+    #    plt.show()
+
+        plt.plot(res[:,4,4,1].T,color='grey')
+        plt.plot(res[:,4,4,4].T,color='hotpink')
+        plt.plot(res[:,4,4,5].T,color='deepskyblue')
+        plt.legend(['crossmodal_0(s,v)','crossmodal_0(s)','crossmodal_0(v)'])
+    #    plt.show()
+
+
+
+        x = y = np.arange(0, self.n, 1)
+        X, Y = np.meshgrid(x, y)
+    #    Z=np.zeros((3,self.n,self.n))
+        Z0=res[:,:,4,0]
+        fig = plt.figure()
+        ax = Axes3D(fig)
+
+        Z1=res[:,:,4,2]
+
+        ax.plot_wireframe(X, Y, Z1, rstride=1, cstride=1)
+        Z2=res[:,:,4,3]
+        ax.plot_wireframe(X, Y, Z0, rstride=1, cstride=1,color='black')
+        ax.plot_wireframe(X, Y, Z1, rstride=1, cstride=1,color='darkred')
+        ax.plot_wireframe(X, Y, Z2, rstride=1, cstride=1,color='darkblue')
+        plt.show()
+        return 1
 
 
 if __name__ =="__main__":
@@ -358,5 +404,3 @@ if __name__ =="__main__":
     result=layer.train(1)
 
     trange=np.arange(0,181,1)
-#    plt.plot(result[:,30])
-#    plt.show()
