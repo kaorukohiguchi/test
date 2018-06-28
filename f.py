@@ -25,4 +25,4 @@ for i in range (400):
 #plt.show()
 
 def myf(x):
-    return 0.05*f.pdf(0.0001+x*0.06, dfn, dfd, loc=0, scale=1)
+    return 0.05*f.pdf(0.0001+x*0.034, dfn, dfd, loc=0, scale=1)

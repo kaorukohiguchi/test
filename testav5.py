@@ -17,8 +17,8 @@ eta_train=0.5
 eta_test=0.33
 lv=30
 lav=1
-x0=5.5
-s=0.3
+x0=5.7
+s=0.28
 tau=5.0/1000
 l_in=1.85/5.0
 l_ex=1.9/2.0
@@ -30,7 +30,7 @@ ga=0.03
 b=180**(-16)
 
 def sigmoid(x):
-    return 1*(1/(1+np.exp(-s*(x-x0)))-0.02)*1.04
+    return 1*(1/(1+np.exp(-s*(x-x0)))-0.32)*1.35
 #    return np.where(x<0,-1.0,1.0)
 def cdistance(s,t):   #2
     if(abs(s-t)>90):
@@ -84,8 +84,8 @@ def inp(k,s,d,w,l):
 #    print(pos)
     isensor=np.zeros((k,k,k))
     mean = np.array([d,w,l])
-    cov  = 0.4*np.diag([1.0,1.0,1.0])
-    isen= 2000*scipy.stats.multivariate_normal(mean,cov).pdf(pos)
+    cov  = 0.3*np.diag([1.0,1.0,1.0])
+    isen= 600*scipy.stats.multivariate_normal(mean,cov).pdf(pos)
     isen=np.reshape(isen,(k,k,k))
 #    print('i', isen)
 #    print(d,w,l)
@@ -172,7 +172,7 @@ class Myclass:
             a2=np.random.randint(0, self.n)
             a3=np.random.randint(0, self.n)
             re[test,:,:,:]=inp(k,1,a1,a2,a3)
-        plt.plot(re[:,:,3,3].T)
+    #    plt.plot(re[:,:,3,3].T)
     #    plt.show()
     def train(self,s):
         fia=np.zeros((self.n,self.n,self.n,self.n))
@@ -181,8 +181,8 @@ class Myclass:
         wv=np.zeros((self.n,self.n,self.n,self.n))
     #    stepa=np.zeros((2,self.n,self.n))
         stepv=np.zeros((1,self.n))
-        res=np.zeros((self.n,self.n,self.n,12))
-        epoch=60
+        res=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n,12))
+        epoch=50
         for epo in range(epoch):
             stepa=np.zeros((2,self.n,self.n,self.n))
             y=np.zeros((2,self.n,self.n,self.n))
@@ -239,17 +239,17 @@ class Myclass:
     #                                self.r_field_a[w0,h0,d0,w1,h1,d1]=r0*np.exp(-myd(w0,h0,d0,w1,h1,d1)**2/(2.0*0.001*sigma_r**2))
         #    res[:,0]=self.r_field_v[:,90]
         #    res[:,1]=self.w_cross_v[:,90]
-            res[:,:,:,0]=self.r_field_a[4,4,4,:,:,:]
-            res[:,:,:,1]=self.w_cross_v[4,4,4,:,:,:]
+            res[:,:,:,:,:,:,0]=self.r_field_a[:,:,:,:,:,:]
+            res[:,:,:,:,:,:,1]=self.w_cross_v[:,:,:,:,:,:]
             if s==1:
-                num=160
+                num=151
             for t in range(num):
                 theta1=np.random.randint(0, self.n, (1, 3))
                 a1=np.random.randint(0, self.n)
                 a2=np.random.randint(0, self.n)
                 a3=np.random.randint(0, self.n)
                 k=self.n
-                if(t<90):
+                if(t<80):
                     input[0,:,:,:]=inp(k,1,a1,a2,a3)
                     input[1,:,:,:]=0
                 else:#1
@@ -265,13 +265,13 @@ class Myclass:
                 l[0,:,:,:]=np.sum(np.sum(np.sum(y[0,:,:,:][np.newaxis,np.newaxis,np.newaxis,:]*self.lamda,axis=5),axis=4),axis=3)
                 l[1,:,:,:]=np.sum(np.sum(np.sum(y[1,:,:,:][np.newaxis,np.newaxis,np.newaxis,:]*self.lamda,axis=5),axis=4),axis=3)
     #            print(self.lamda)
-                print('l',l)
+    #            print('l',l)
 
                 c[0,:,:,:]=np.sum(np.sum(np.sum(y[1,:,:,:][np.newaxis,np.newaxis,np.newaxis,:]*self.w_cross_v,axis=5),axis=4),axis=3)
                 c[1,:,:,:]=np.sum(np.sum(np.sum(y[0,:,:,:][np.newaxis,np.newaxis,np.newaxis,:]*self.w_cross_a,axis=5),axis=4),axis=3)
                 y=sigmoid(u+c+l)
                 print('u+c+l',u+c+l)
-                for j in range(4):
+                for j in range(2):
                     y+=0.002*(-y+sigmoid(u+l+c))
                     l[0,:,:,:]=np.sum(np.sum(np.sum(y[0,:,:,:][np.newaxis,np.newaxis,np.newaxis,:]*self.lamda,axis=5),axis=4),axis=3)
                     l[1,:,:,:]=np.sum(np.sum(np.sum(y[1,:,:,:][np.newaxis,np.newaxis,np.newaxis,:]*self.lamda,axis=5),axis=4),axis=3)
@@ -282,12 +282,12 @@ class Myclass:
                 print('c',c)
             #    print(l)
                 print('y',y)
-                ytest=np.where(y>0.28,-1,0)
+                ytest=np.where(y>-0.2,-1,0)
                 stepa=np.where(stepa>0,stepa+1,0)
                 stepa=np.where(stepa+ytest==-1,1,stepa)
                 print('step',stepa)
 #r update  2.19,2.39,A9
-                ga=0.4*myf(stepa)
+                ga=myf(stepa)
                 input_ex=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
                 y_ex=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
                 ga_ex=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
@@ -320,16 +320,16 @@ class Myclass:
         #        yj_ex[i,:]=np.copy(y[1,:,:,:])
         #        y_ex[:,i]=np.copy(y[0,:,:,:])
         #        self.w_cross_a+=ga_exa*(yj_ex-self.w_cross_a)*y_ex
-                if(t==90):
-                    res[:,:,:,2]+=self.r_field_v[4,4,4,:,:,:]/epoch
-                    res[:,:,:,3]+=self.r_field_a[4,4,4,:,:,:]/epoch
-                    res[:,:,:,4]+=self.w_cross_v[4,4,4,:,:,:]/epoch
-                    res[:,:,:,5]+=self.w_cross_a[4,4,4,:,:,:]/epoch
+                if(t==80):
+                    res[:,:,:,:,:,:,2]+=self.r_field_v[:,:,:,:,:,:]/epoch
+                    res[:,:,:,:,:,:,3]+=self.r_field_a[:,:,:,:,:,:]/epoch
+                    res[:,:,:,:,:,:,4]+=self.w_cross_v[:,:,:,:,:,:]/epoch
+                    res[:,:,:,:,:,:,5]+=self.w_cross_a[:,:,:,:,:,:]/epoch
                 elif(t==150):
-                    res[:,:,:,6]+=self.r_field_v[4,4,4,:,:,:]/epoch
-                    res[:,:,:,7]+=self.r_field_a[4,4,4,:,:,:]/epoch
-                    res[:,:,:,8]+=self.w_cross_v[4,4,4,:,:,:]/epoch
-                    res[:,:,:,9]+=self.w_cross_a[4,4,4,:,:,:]/epoch
+                    res[:,:,:,:,:,:,6]+=self.r_field_v[:,:,:,:,:,:]/epoch
+                    res[:,:,:,:,:,:,7]+=self.r_field_a[:,:,:,:,:,:]/epoch
+                    res[:,:,:,:,:,:,8]+=self.w_cross_v[:,:,:,:,:,:]/epoch
+                    res[:,:,:,:,:,:,9]+=self.w_cross_a[:,:,:,:,:,:]/epoch
         #    fia+=self.r_field_a/epoch
         #    fiv+=self.r_field_v/epoch
         #    wa+=self.w_cross_a/epoch
@@ -345,56 +345,179 @@ class Myclass:
     #    res[:,4]=wv[:,70]
     #    res[:,5]=wa[:,70]
     #    res=res/epoch
-        plt.plot(res[:,4,4,0].T,color='black')
-        plt.plot(res[:,4,4,1].T,color='grey')
-        plt.plot(res[:,4,4,2].T,color='darkred')
-        plt.plot(res[:,4,4,3].T,color='darkblue')
-        plt.plot(res[:,4,4,4].T,color='hotpink')
-        plt.plot(res[:,4,4,5].T,color='deepskyblue')
-        plt.plot(res[:,4,4,6].T,color='red')
-        plt.plot(res[:,4,4,7].T,color='blue')
-        plt.plot(res[:,4,4,8].T,color='lightpink')
-        plt.plot(res[:,4,4,9].T,color='skyblue')
+        plt.plot(res[4,4,4,:,4,4,0].T,color='black')
+        plt.plot(res[4,4,4,:,4,4,1].T,color='grey')
+
+        plt.plot(res[4,4,4,:,4,4,2].T,color='darkred')
+        plt.plot(res[4,4,4,:,4,4,3].T,color='darkblue')
+        plt.plot(res[4,4,4,:,4,4,4].T,color='hotpink')
+        plt.plot(res[4,4,4,:,4,4,5].T,color='deepskyblue')
+        plt.plot(res[4,4,4,:,4,4,6].T,color='red')
+        plt.plot(res[4,4,4,:,4,4,7].T,color='blue')
+        plt.plot(res[4,4,4,:,4,4,8].T,color='lightpink')
+        plt.plot(res[4,4,4,:,4,4,9].T,color='skyblue')
     ##    plt.plot(res,color=['black','grey','darkred','darkblue','hotpink','black','grey','darkred','darkblue','hotpink'])
         plt.legend(['weight_0(s,v)','crossmodal_0(s,v)','weight_150(s)','weight_150(v)','crossmodal_150(s)','crossmodal_150(v)','weight_300(s)','weight_300(v)','crossmodal_300(s)','crossmodal_300(v)'])
     #    plt.title("Change of synaptic weight (hypothesis)(neulon number=90 as example)")
     #    plt.ylabel("synaptic weight")
     #    plt.xlabel("neulon number")
+        plt.title("5 times-100-0.1")
         plt.show()
 
 
 
-        plt.plot(res[:,4,4,0].T,color='black')
-        plt.plot(res[:,4,4,2].T,color='darkred')
-        plt.plot(res[:,4,4,3].T,color='darkblue')
-        plt.plot(res[:,4,4,6].T,color='red')
-        plt.plot(res[:,4,4,7].T,color='blue')
+        plt.plot(res[4,4,4,:,4,4,0].T,color='black')
+        plt.plot(res[4,4,4,:,4,4,2].T,color='darkred')
+        plt.plot(res[4,4,4,:,4,4,3].T,color='darkblue')
+        plt.plot(res[4,4,4,:,4,4,6].T,color='red')
+        plt.plot(res[4,4,4,:,4,4,7].T,color='blue')
         plt.legend(['weight_0(s,v)','weight_150(s)','weight_150(v)','weight_300(s)','weight_300(v)'])
-    #    plt.show()
+        plt.show()
 
-        plt.plot(res[:,4,4,1].T,color='grey')
-        plt.plot(res[:,4,4,4].T,color='hotpink')
-        plt.plot(res[:,4,4,5].T,color='deepskyblue')
+        plt.plot(res[4,4,4,:,4,4,1].T,color='grey')
+        plt.plot(res[4,4,4,:,4,4,4].T,color='hotpink')
+        plt.plot(res[4,4,4,:,4,4,5].T,color='deepskyblue')
         plt.legend(['crossmodal_0(s,v)','crossmodal_0(s)','crossmodal_0(v)'])
-    #    plt.show()
+        plt.show()
 
 
 
         x = y = np.arange(0, self.n, 1)
         X, Y = np.meshgrid(x, y)
+        fig = plt.figure(figsize=(8,10))
+        ax = Axes3D(fig)
     #    Z=np.zeros((3,self.n,self.n))
-        Z0=res[:,:,4,0]
-        fig = plt.figure()
+        Z0=res[4,4,4,:,:,4,0]+4
+        Z80=res[4,4,4,:,:,4,2]+4
+        Z150=res[4,4,4,:,:,4,6]+4
+
+        Z0_6=res[4,4,4,:,:,6,0]+6
+        Z80_6=res[4,4,4,:,:,6,2]+6
+        Z150_6=res[4,4,4,:,:,6,6]+6
+        Z0_8=res[4,4,4,:,:,8,0]+8
+        Z80_8=res[4,4,4,:,:,8,2]+8
+        Z150_8=res[4,4,4,:,:,8,6]+8
+        Z0_2=res[4,4,4,:,:,2,0]+2
+        Z80_2=res[4,4,4,:,:,2,2]+2
+        Z150_2=res[4,4,4,:,:,2,6]+2
+        ax.plot_wireframe(X, Y, Z0, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z80, rstride=1, cstride=1,color='darkred',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z150, rstride=1, cstride=1,color='red',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_6, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z80_6, rstride=1, cstride=1,color='darkred',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z150_6, rstride=1, cstride=1,color='red',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_8, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z80_8, rstride=1, cstride=1,color='darkred',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z150_8, rstride=1, cstride=1,color='red',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_2, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z80_2, rstride=1, cstride=1,color='darkred',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z150_2, rstride=1, cstride=1,color='red',linewidth = 0.7)
+        ax.view_init(8,-60)
+        plt.show()
+
+
+        fig = plt.figure(figsize=(8,10))
+        ax = Axes3D(fig)
+        Z0=res[4,4,4,:,:,4,0]+4
+        Z80=res[4,4,4,:,:,4,3]+4
+        Z150=res[4,4,4,:,:,4,7]+4
+        Z0_6=res[4,4,4,:,:,6,0]+6
+        Z80_6=res[4,4,4,:,:,6,3]+6
+        Z150_6=res[4,4,4,:,:,6,7]+6
+        Z0_8=res[4,4,4,:,:,8,0]+8
+        Z80_8=res[4,4,4,:,:,8,3]+8
+        Z150_8=res[4,4,4,:,:,8,7]+8
+        Z0_2=res[4,4,4,:,:,2,0]+2
+        Z80_2=res[4,4,4,:,:,2,3]+2
+        Z150_2=res[4,4,4,:,:,2,7]+2
+        ax.plot_wireframe(X, Y, Z0, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z80, rstride=1, cstride=1,color='darkblue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z150, rstride=1, cstride=1,color='blue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_6, rstride=1, cstride=1,color='darkblue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z80_6, rstride=1, cstride=1,color='darkblue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z150_6, rstride=1, cstride=1,color='blue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_8, rstride=1, cstride=1,color='darkblue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z80_8, rstride=1, cstride=1,color='darkblue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z150_8, rstride=1, cstride=1,color='blue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_2, rstride=1, cstride=1,color='darkblue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z80_2, rstride=1, cstride=1,color='darkblue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z150_2, rstride=1, cstride=1,color='blue',linewidth = 0.7)
+        ax.view_init(8,-60)
+        plt.show()
+
+        s=4
+        fig = plt.figure(figsize=(8,10))
         ax = Axes3D(fig)
 
-        Z1=res[:,:,4,2]
-
-        ax.plot_wireframe(X, Y, Z1, rstride=1, cstride=1)
-        Z2=res[:,:,4,3]
-        ax.plot_wireframe(X, Y, Z0, rstride=1, cstride=1,color='black')
-        ax.plot_wireframe(X, Y, Z1, rstride=1, cstride=1,color='darkred')
-        ax.plot_wireframe(X, Y, Z2, rstride=1, cstride=1,color='darkblue')
+        Z0=res[s,s,s,:,:,2,1]+2
+        Z1=res[s,s,s,:,:,2,4]+2
+        Z2=res[s,s,s,:,:,2,8]+2
+        Z0_4=res[s,s,s,:,:,4,1]+4
+        Z1_4=res[s,s,s,:,:,4,4]+4
+        Z2_4=res[s,s,s,:,:,4,8]+4
+        Z0_6=res[s,s,s,:,:,6,1]+6
+        Z1_6=res[s,s,s,:,:,6,4]+6
+        Z2_6=res[s,s,s,:,:,6,8]+6
+        Z0_8=res[s,s,s,:,:,8,1]+8
+        Z1_8=res[s,s,s,:,:,8,4]+8
+        Z2_8=res[s,s,s,:,:,8,8]+8
+        ax.plot_wireframe(X, Y, Z0, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z1, rstride=1, cstride=1,color='darkred',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z2, rstride=1, cstride=1,color='red',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_4, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z1_4, rstride=1, cstride=1,color='darkred',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z2_4, rstride=1, cstride=1,color='red',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_6, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z1_6, rstride=1, cstride=1,color='darkred',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z2_6, rstride=1, cstride=1,color='red',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_8, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z1_8, rstride=1, cstride=1,color='darkred',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z2_8, rstride=1, cstride=1,color='red',linewidth = 0.7)
+        ax.view_init(8,-60)
         plt.show()
+
+        fig = plt.figure(figsize=(8,10))
+        ax = Axes3D(fig)
+
+        Z0=res[s,s,s,:,:,2,1]+2
+        Z1=res[s,s,s,:,:,2,5]+2
+        Z2=res[s,s,s,:,:,2,9]+2
+        Z0_4=res[s,s,s,:,:,4,1]+4
+        Z1_4=res[s,s,s,:,:,4,5]+4
+        Z2_4=res[s,s,s,:,:,4,9]+4
+        Z0_6=res[s,s,s,:,:,6,1]+6
+        Z1_6=res[s,s,s,:,:,6,5]+6
+        Z2_6=res[s,s,s,:,:,6,9]+6
+        Z0_8=res[s,s,s,:,:,8,1]+8
+        Z1_8=res[s,s,s,:,:,8,5]+8
+        Z2_8=res[s,s,s,:,:,8,9]+8
+        ax.plot_wireframe(X, Y, Z0, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z1, rstride=1, cstride=1,color='darkblue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z2, rstride=1, cstride=1,color='blue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_4, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z1_4, rstride=1, cstride=1,color='darkblue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z2_4, rstride=1, cstride=1,color='blue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_6, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z1_6, rstride=1, cstride=1,color='darkblue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z2_6, rstride=1, cstride=1,color='blue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z0_8, rstride=1, cstride=1,color='black',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z1_8, rstride=1, cstride=1,color='darkblue',linewidth = 0.7)
+        ax.plot_wireframe(X, Y, Z2_8, rstride=1, cstride=1,color='blue',linewidth = 0.7)
+        ax.view_init(8,-60)
+        plt.show()
+
+        fig = plt.figure()
+        ax = Axes3D(fig)
+        Z0=res[4,4,4,:,:,4,1]
+        Z80=res[4,4,4,:,:,4,4]
+        Z150=res[4,4,4,:,:,4,8]
+        Z80_7=res[4,4,4,:,:,7,4]+3
+        Z150_7=res[4,4,4,:,:,7,8]+3
+        ax.plot_wireframe(X, Y, Z0, rstride=1, cstride=1,color='black',linewidth = 0.8)
+        ax.plot_wireframe(X, Y, Z80, rstride=1, cstride=1,color='darkblue',linewidth = 0.8)
+        ax.plot_wireframe(X, Y, Z150, rstride=1, cstride=1,color='blue',linewidth = 0.8)
+        ax.plot_wireframe(X, Y, Z80_7, rstride=1, cstride=1,color='darkblue',linewidth = 0.8)
+        ax.plot_wireframe(X, Y, Z150_7, rstride=1, cstride=1,color='blue',linewidth = 0.8)
         return 1
 
 
