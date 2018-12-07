@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import sys
 import matplotlib.pyplot as plt
 
 def mysign(x):
@@ -56,7 +57,7 @@ class hpf:
         self.th=0.0
 
         rate=0.0
-        for b in range(10):
+        for b in range(1000):
             test = np.copy(self.data)
             a=random.randint(0,self.n-1)
             if (self.error>0):
@@ -64,19 +65,21 @@ class hpf:
                     s=random.randint(0,99)
                     if(s<self.error):
                             test[a,i]=-test[a,i]
-            print(test.shape)
+            # print(test.shape)
             test=test[a,:]
-            while a in range(10):
+            for c in range(100):
                 f=mysign(np.dot(np.matrix(test),self.w)-self.th)
+                sys.stdout.write("\r update b={0:2d} a={0:2d}".format(b, a))
+                sys.stdout.flush()
                 if np.all(f==test):
                     if np.all(f==self.data[a]):
-                        print("correct")
+                        # print("correct")
                         rate+= 1.0/10
                         break
                     else:
                         for j in range(self.l-1):
                             if(f[0,j]==self.data[a,j]):
-                                rate+=1.0/self.l/10
+                                rate+=1.0/(self.l*10)
                         break
                 else:
                     test=f
@@ -93,9 +96,8 @@ if __name__ =="__main__":
     for k in range (6):
         for i in range(21):
             hf=hpf(data1,i,k+1)
-            print(i,k)
-            for j in range(2):
-                res[i,k]+=hf.update()/2.0
+            # print(i,k)
+            res[i,k]+=hf.update()
 
 
 

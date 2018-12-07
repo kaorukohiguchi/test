@@ -5,7 +5,7 @@ import scipy.stats
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from f import myf
-
+import arm
 #parameters value
 ias=36
 ivs0=20
@@ -125,7 +125,7 @@ class Myclass:
 
         self.r_field_v=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
         self.r_field_a=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))
-        self.lamda=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))  #v,a共通
+        self.lamda=np.zeros((self.n,self.n,self.n,self.n,self.n,self.n))  #v,a
         print('b')
 #        for w0 in range(self.n):
 #                for d0 in range(self.n):
@@ -523,6 +523,8 @@ class Myclass:
 
 if __name__ =="__main__":
     print('a')
+    a=arm.armpos()
+    print(a)
     layer=Myclass()
     result=layer.train(1)
 

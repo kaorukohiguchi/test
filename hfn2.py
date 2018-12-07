@@ -69,7 +69,6 @@ class hpf:
                         test[a,i]=-test[a,i]
         test=test[a,:]
         print("IS SAME?", (data_check[a] == self.data[a]).all())
-        import ipdb; ipdb.set_trace()
         while True:
             f=mysign(np.dot(np.matrix(test),self.w)-self.th)
             if np.all(f==test):
@@ -104,7 +103,7 @@ if __name__ =="__main__":
     hf=hpf(data1,0,2)
     hf.update()
     res=np.zeros((51,1))
-    for i in range (5):
+    for i in range (50):
         r=0.0
         for j in range(50):
             hf=hpf(data1,i,4)
